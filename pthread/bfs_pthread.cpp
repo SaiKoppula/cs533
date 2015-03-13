@@ -8,8 +8,8 @@
 #include <vector>
 #include <unordered_map>
 #include <pthread.h>
+#include <vector>
 using namespace lemon;
-
 using namespace std;
 
 FullGraph g;
@@ -23,7 +23,7 @@ queue<int> Q2;
 void random_graph(ListGraph* g, int size)
 {
     int prob = 3;
-    
+    srand(time(NULL));
     for (int i = 0; i < size; i++)
         g->addNode();
     
@@ -39,15 +39,52 @@ void random_graph(ListGraph* g, int size)
         }
     }
 }
-
-
+/**
+*   Noob Dao's version of generating a random undirected
+*	graph, each node will have number of arcs in a given
+*	range
+*	
+*	Parameters:
+*		size: Number of nodes in the graph
+*		lowb: The least number of arcs each node has
+*		highB the largest number of arcs each node has
+**/
+void random_graph_2(ListGraph * g, int size, int lowB, int highB)
+{
+    int numArcs[size];
+	vector<ListGraph::Node> vNode;
+	for(int i = 0; i < size; i++){
+		vNode.push_back(g->addNode());
+		numArcs[i]=0;
+	}
+	int counter = 0;
+	for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
+    {
+		cout << "Working on Node " << counter<<endl;
+		ListGraph::Node n(u);
+		int numArc = rand() % (highB-lowB+1) + lowB;  //get a number between lowB and highB
+		while(numArcs[counter] < numArc){
+		    srand(time(NULL));
+		    int sel = rand() % size;
+			if(sel != counter && numArcs[sel] < highB){
+				g->addEdge(n,vNode[sel]);
+				numArcs[counter]++;
+				numArcs[sel]++;
+		    }
+		}
+		counter++;
+    }
+	//debug
+    for(int i = 0;i < size;i++)
+		cout << numArcs[i] << " ";
+    cout << endl;
+}
 
 void *bfs_node(void *arg)
 {
     int index = * (int*)arg;
     FullGraph::Node n = g(index);
     //cout << "index: " << index << endl;
-    
     for(FullGraph::IncEdgeIt e(g,n); e != INVALID; ++e){
         //cout << "haha" << endl;
         FullGraph::Edge edge(e);
@@ -66,8 +103,14 @@ void *bfs_node(void *arg)
 
 int main()
 {
+
+    //play area//
+    ListGraph l;
+    random_graph_2(&l,10,1,4);
+	//end play area//
+
     //initialize
-    size = 50000;
+    size = 50;
     init = 5;
     g.resize(size);
     
