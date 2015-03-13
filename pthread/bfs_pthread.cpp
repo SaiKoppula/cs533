@@ -62,7 +62,7 @@ void random_graph_2(ListGraph * g, int size, int lowB, int highB)
     {
 		cout << "Working on Node " << counter<<endl;
 		ListGraph::Node n(u);
-		int numArc = rand() % (highB-lowB+1) + lowB;  //get a number between lowB and highB
+		int numArc = rand() % (highB-lowB+1 - (higbB/2) + lowB;  //get a number between lowB and highB
 		while(numArcs[counter] < numArc){
 		    srand(time(NULL));
 		    int sel = rand() % size;
@@ -106,7 +106,7 @@ int main()
 
     //play area//
     ListGraph l;
-    random_graph_2(&l,10,1,4);
+    random_graph_2(&l,1000,1,30);
 	//end play area//
 
     //initialize
