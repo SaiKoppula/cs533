@@ -1,19 +1,37 @@
 #include <iostream>
-#include<lemon/graph_to_eps.h>
+#include <lemon/graph_to_eps.h>
 #include <lemon/list_graph.h>
 #include <lemon/full_graph.h>
 #include <lemon/concepts/graph.h>
 #include <queue>
+#include "../lib/ourTime.h"
+
 using namespace lemon;
 using namespace std;
-int g_size = 5000;
-int main()
+
+#define ARGS 3
+
+
+void usage()
+{
+    printf("USAGE: ./bfs [Number of Nodes] [Number of threads] \n");
+}
+
+int main(int argc, char * argv[])
 {
      /* ListDigraph g;
       ListDigraph::Node u = g.addNode();
       ListDigraph::Node v = g.addNode();
       ListDigraph::Arc  a = g.addArc(u, v);
       ListDigraph::Node w = g.addNode();*/
+
+    if (argc != ARGS)
+    {
+        usage();
+        return -1;
+    }
+
+    int g_size = atoi(argv[1]);
     FullGraph g(g_size);
     queue<int> myQ;
     /** BFS **/
@@ -27,6 +45,7 @@ int main()
     }
     myQ.push(init);
     int curr;
+    double t1 = get_clock();
     while(!myQ.empty()){
 	curr = myQ.front();
 	myQ.pop();
@@ -45,6 +64,8 @@ int main()
 	    cout << processed[j]<< ",";
 	    cout << endl;*/
     }
+    double t2 = get_clock();
+    printf("Time: %lf seconds\n",(t2-t1));
     cout << "Hello World! This is LEMON library here." << endl;
     cout << "We have a directed graph with " << g.nodeNum() << " nodes "
          << "and " << g.arcNum() << " arc." << endl;
