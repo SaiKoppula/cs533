@@ -7,7 +7,7 @@
 EXES = bfs
 
 # Flags to use when compiling, preprocessing, assembling, and linking
-CXX = g++
+CXX = g++ -std=c++11 -pthread
 WARNINGS = -Wchar-subscripts -Wparentheses -Wreturn-type -Wmissing-braces -Wundef -Wshadow
 CXX_OPTS = -c -g -O0 -Wfatal-errors -Werror $(WARNINGS)
 
