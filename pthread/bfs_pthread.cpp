@@ -9,6 +9,10 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
+#include "../lib/ourTime.h"
+
+#define ARGS 3
+
 using namespace lemon;
 using namespace std;
 
@@ -100,9 +104,20 @@ void *bfs_node(void *arg)
     pthread_exit(NULL);
 }
 
-
-int main()
+void usage()
 {
+    printf("USAGE: ./bfs [number of nodes] [number of threads]");
+}
+
+int main(int argc, char * argv[])
+{
+
+    //Param Check
+    if (argc != ARGS)
+    {
+        usage();
+        return -1;
+    }
 
     //play area//
     ListGraph l;
@@ -110,13 +125,16 @@ int main()
 	//end play area//
 
     //initialize
-    size = 50;
+    size = atoi(argv[1]);
+    printf("NOTE: NUM THREADS NOT USED YET! \n");
     init = 5;
     g.resize(size);
     
     Q1.push(init);
     visited[init] = 1;
     cout << "initial node: " << init << endl;
+
+    double t1 = get_clock();
 
     while(!Q1.empty())
     {
@@ -140,7 +158,7 @@ int main()
                 exit(-1);
             }
         }
-
+        
         // free attribute and wait for the other threads
         pthread_attr_destroy(&attr);
         for(i = 0; i < num_threads; i++){
@@ -160,7 +178,8 @@ int main()
         while(!Q2.empty())
             Q2.pop();
     }
-    
+        double t2 = get_clock();
+        printf("Time: %lf seconds\n",(t2-t1));
     
     
     return 0;
