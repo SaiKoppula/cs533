@@ -8,14 +8,30 @@
 
 using namespace lemon;
 using namespace std;
-int g_size = 5000;
-int main()
+
+#define ARGS 3
+
+
+void usage()
+{
+    printf("USAGE: ./bfs [Number of Nodes] [Number of threads] \n");
+}
+
+int main(int argc, char * argv[])
 {
      /* ListDigraph g;
       ListDigraph::Node u = g.addNode();
       ListDigraph::Node v = g.addNode();
       ListDigraph::Arc  a = g.addArc(u, v);
       ListDigraph::Node w = g.addNode();*/
+
+    if (argc != ARGS)
+    {
+        usage();
+        return -1;
+    }
+
+    int g_size = atoi(argv[1]);
     FullGraph g(g_size);
     queue<int> myQ;
     /** BFS **/
