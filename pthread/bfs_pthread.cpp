@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
-#include "../lib/ourTime.h"
+//#include "../lib/ourTime.h"
 
 #define ARGS 3
 
@@ -64,17 +64,19 @@ void random_graph_2(ListGraph * g, int size, int lowB, int highB)
 	int counter = 0;
 	for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
     {
+		int sel;
 		cout << "Working on Node " << counter<<endl;
 		ListGraph::Node n(u);
-		int numArc = rand() % (highB-lowB+1 - (higbB/2) + lowB;  //get a number between lowB and highB
+		int numArc = rand() % (highB-lowB+1 - (highB/2)) + lowB;  //get a number between lowB and highB
 		while(numArcs[counter] < numArc){
 		    srand(time(NULL));
-		    int sel = rand() % size;
-			if(sel != counter && numArcs[sel] < highB){
-				g->addEdge(n,vNode[sel]);
-				numArcs[counter]++;
-				numArcs[sel]++;
-		    }
+			do{
+		    	sel = rand() % size;
+			}
+			while(sel != counter && numArcs[sel] < highB);
+			g->addEdge(n,vNode[sel]);
+			numArcs[counter]++;
+			numArcs[sel]++;
 		}
 		counter++;
     }
@@ -121,7 +123,7 @@ int main(int argc, char * argv[])
 
     //play area//
     ListGraph l;
-    random_graph_2(&l,1000,1,30);
+    random_graph_2(&l,1000,2,30);
 	//end play area//
 
     //initialize
@@ -134,7 +136,7 @@ int main(int argc, char * argv[])
     visited[init] = 1;
     cout << "initial node: " << init << endl;
 
-    double t1 = get_clock();
+    //double t1 = get_clock();
 
     while(!Q1.empty())
     {
@@ -178,8 +180,8 @@ int main(int argc, char * argv[])
         while(!Q2.empty())
             Q2.pop();
     }
-        double t2 = get_clock();
-        printf("Time: %lf seconds\n",(t2-t1));
+        //double t2 = get_clock();
+  //      printf("Time: %lf seconds\n",(t2-t1));
     
     
     return 0;
