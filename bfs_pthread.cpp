@@ -7,7 +7,9 @@
 #include <queue>
 #include <vector>
 #include <unordered_map>
+#include <pthread.h>
 using namespace lemon;
+
 using namespace std;
 
 FullGraph g;
@@ -65,7 +67,7 @@ void *bfs_node(void *arg)
 int main()
 {
     //initialize
-    size = 500;
+    size = 50000;
     init = 5;
     g.resize(size);
     
