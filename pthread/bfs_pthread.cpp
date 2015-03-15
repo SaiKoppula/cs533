@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
+#include "../lib/RandomGraph.h"
 //#include "../lib/ourTime.h"
 
 #define ARGS 3
@@ -17,6 +18,7 @@ using namespace lemon;
 using namespace std;
 
 FullGraph g;
+ListGraph l;
 int size;
 int init;
 unordered_map<int, int> visited;
@@ -53,6 +55,7 @@ void random_graph(ListGraph* g, int size)
 *		lowb: The least number of arcs each node has
 *		highB the largest number of arcs each node has
 **/
+/*
 void random_graph_2(ListGraph * g, int size, int lowB, int highB)
 {
     int numArcs[size];
@@ -65,11 +68,12 @@ void random_graph_2(ListGraph * g, int size, int lowB, int highB)
 	for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
     {
 		int sel;
-		cout << "Working on Node " << counter<<endl;
+		//cout << "Working on Node " << counter<<endl;
 		ListGraph::Node n(u);
 		int numArc = rand() % (highB-lowB+1 - (highB/2)) + lowB;  //get a number between lowB and highB
 		while(numArcs[counter] < numArc){
-		    srand(time(NULL));
+		    
+			srand(time(NULL));
 			do{
 		    	sel = rand() % size;
 			}
@@ -85,17 +89,17 @@ void random_graph_2(ListGraph * g, int size, int lowB, int highB)
 		cout << numArcs[i] << " ";
     cout << endl;
 }
-
+*/
 void *bfs_node(void *arg)
 {
     int index = * (int*)arg;
-    FullGraph::Node n = g(index);
+    ListGraph::Node n =l.nodeFromId(index);
     //cout << "index: " << index << endl;
-    for(FullGraph::IncEdgeIt e(g,n); e != INVALID; ++e){
+    for(ListGraph::IncEdgeIt e(l,n); e != INVALID; ++e){
         //cout << "haha" << endl;
-        FullGraph::Edge edge(e);
-        FullGraph::Node temp(g.oppositeNode(n,edge));
-        int i = g.index(temp);
+        ListGraph::Edge edge(e);
+        ListGraph::Node temp(l.oppositeNode(n,edge));
+        int i = l.id(temp);
         //sychronization??
         if(!visited[i]){
             visited[i]++;
@@ -122,10 +126,8 @@ int main(int argc, char * argv[])
     }
 
     //play area//
-    ListGraph l;
-    random_graph_2(&l,1000,2,30);
+    random_graph_2(&l,100,10,150);
 	//end play area//
-
     //initialize
     size = atoi(argv[1]);
     printf("NOTE: NUM THREADS NOT USED YET! \n");
