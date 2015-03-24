@@ -14,7 +14,7 @@
 #include "../lib/ourSerial.h"
 
 #define ARGS 3
-#define TIMER_ENABLE 0
+#define TIMER_ENABLE 1
 
 using namespace lemon;
 using namespace std;
@@ -42,12 +42,13 @@ int main(int argc, char * argv[])
     num_threads = atoi(argv[2]);
 
     //Build graph -- Template uses Dao's Random Graph Generator
-    random_graph(&l, size, 1, size/2);
+    random_graph(&l, size, size/10, size/2);
 
     #if TIMER_ENABLE
       double t1 = get_clock();
     #endif
     //Do Computation
+    ourSerialBFS(&l, size, 0);
     #if TIMER_ENABLE
       double t2 = get_clock();
       printf("Time: %lf seconds\n",(t2-t1));
