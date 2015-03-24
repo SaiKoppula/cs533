@@ -16,7 +16,7 @@ using namespace lemon;
 *		lowb: The least number of arcs each node has
 *		highB the largest number of arcs each node has
 **/
-void random_graph_2(ListGraph * g, int size, int lowB, int highB)
+void random_graph(ListGraph * g, int size, int lowB, int highB)
 {
     int numArcs[size];
 	vector<ListGraph::Node> vNode;
