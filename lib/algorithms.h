@@ -3,7 +3,11 @@
 #include <lemon/list_graph.h>
 #include <lemon/concepts/graph.h>
 #include <queue>
-#define PRINT_ENABLE 0
+#include <vector>
+#include <unordered_map>
+#include <pthread.h>
+#include <vector>
+#define PRINT_ALG_ENABLE 1
 
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
@@ -38,16 +42,111 @@ void ourSerialBFS(ListGraph * g, int size, int init)
 		         processing[g->id(temp)] = 1;
 	       }
 	   }
-     #if PRINT_ENABLE
+     #if PRINT_ALG_ENABLE
      cout << "Queue Size: " << myQ.size() << " Queue Head: " << myQ.front() << endl;
      #endif
   }
 
 
   //Sanity Check
-  #if PRINT_ENABLE
+  #if PRINT_ALG_ENABLE
   for(int j = 0; j < size;j++)
 	    cout << processed[j]<< ",";
 	cout << endl;
   #endif
+}
+typedef struct params_t
+{
+	ListGraph * l;
+  int index;
+  unordered_map<int, int> visited;
+  queue<int> Q1;
+  queue<int> Q2;
+} params;
+void *bfs_node(void *arg)
+{
+    params * p = (params *) arg;
+    int index = p->index;
+    ListGraph::Node n = p->l->nodeFromId(index);
+    //cout << "index: " << index << endl;
+    for(ListGraph::IncEdgeIt e(*(p->l),n); e != INVALID; ++e){
+        //cout << "haha" << endl;
+        ListGraph::Edge edge(e);
+        ListGraph::Node temp((p->l)->oppositeNode(n,edge));
+        int i = p->l->id(temp);
+        //sychronization??
+        if(!p->visited[i]){
+            p->visited[i]++;
+            #if PRINT_ALG_ENABLE
+            cout << "visit " << i << endl;
+            #endif
+            p->Q2.push(i);
+        }
+    }
+    pthread_exit(NULL);
+}
+
+void ourParallelBFS(ListGraph * l, int size, int init)
+{
+
+  //Parameter inialization
+  unordered_map<int, int> visited;
+  queue<int> Q1;
+  queue<int> Q2;
+
+
+  Q1.push(init);
+  visited[init] = 1;
+
+
+  while(!Q1.empty())
+  {
+      int rc;
+      int i;
+      int num_threads = Q1.size(); //CHANGE THIS
+      pthread_t threads[num_threads];
+      pthread_attr_t attr;
+      void *status;
+
+      // Initialize and set thread joinable
+      pthread_attr_init(&attr);
+      pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+      params * th_params = (params *) malloc (num_threads * sizeof(params));
+      for(i = 0; i < num_threads; i++){
+          //cout << "main() : creating thread, " << i << endl;
+          th_params[i].l = l;
+		      th_params[i].index = Q1.front();;
+          th_params[i].Q1 = Q1;
+		      th_params[i].Q2 = Q2;
+          th_params[i].visited = visited;
+          rc = pthread_create(&threads[i], NULL, bfs_node, (void *)&(th_params[i]));
+          Q1.pop();
+          if (rc){
+              cout << "Error:unable to create thread," << rc << endl;
+              exit(-1);
+          }
+      }
+
+      // free attribute and wait for the other threads
+      pthread_attr_destroy(&attr);
+      for(i = 0; i < num_threads; i++){
+          rc = pthread_join(threads[i], &status);
+          if(rc){
+              cout << "Error:unable to join," << rc << endl;
+              exit(-1);
+          }
+          #if PRINT_ALG_ENABLE
+          cout << "Main: completed thread id :" << i ;
+          cout << "  exiting with status :" << status << endl;
+          #endif
+      }
+
+
+
+      Q1.swap(Q2);
+
+      while(!Q2.empty())
+          Q2.pop();
+  }
+
 }
