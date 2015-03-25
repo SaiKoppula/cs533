@@ -6,6 +6,7 @@
 #include <vector>
 using namespace std;
 using namespace lemon;
+#define PRINT_GrGen 0
 /**
 *   Noob Dao's version of generating a random undirected
 *	graph, each node will have number of arcs in a given
@@ -34,7 +35,9 @@ void random_graph(ListGraph * g, int size, int lowB, int highB)
 		//cout << "Working on Node " << counter<<endl;
 		ListGraph::Node n(u);
 		int numArc = rand() % (highB-lowB+1 - (highB/2)) + lowB;  //get a number between lowB and highB
-		cout << "Generating " << numArc << " edges for node " << g->id(u) << endl;
+    #if PRINT_GrGen
+    cout << "Generating " << numArc << " edges for node " << g->id(u) << endl;
+    #endif
     while(numArcs[g->id(u)] < numArc){
 
 			srand(time(NULL));
@@ -51,6 +54,7 @@ void random_graph(ListGraph * g, int size, int lowB, int highB)
 
     }
 
+  #if PRINT_GrGen
   for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
   {
     cout << "Edges for Node " << g->id(u) << ": ";
@@ -65,6 +69,7 @@ void random_graph(ListGraph * g, int size, int lowB, int highB)
     for(int i = 0;i < size;i++)
 		cout << numArcs[i] << " ";
     cout << endl;
+  #endif
 };
 
 void full_graph(ListGraph * g, int size)
@@ -90,7 +95,7 @@ void full_graph(ListGraph * g, int size)
           numArcs[g->id(v)]++;
         }
     }
-
+  #if PRINT_GrGen
   for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
   {
     cout << "Edges for Node " << g->id(u) << ": ";
@@ -105,4 +110,5 @@ void full_graph(ListGraph * g, int size)
     for(int i = 0;i < size;i++)
 		cout << numArcs[i] << " ";
     cout << endl;
+  #endif
 };

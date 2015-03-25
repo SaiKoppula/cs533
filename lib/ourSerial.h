@@ -3,6 +3,7 @@
 #include <lemon/list_graph.h>
 #include <lemon/concepts/graph.h>
 #include <queue>
+#define PRINT_ENABLE 0
 
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
@@ -37,13 +38,16 @@ void ourSerialBFS(ListGraph * g, int size, int init)
 		         processing[g->id(temp)] = 1;
 	       }
 	   }
+     #if PRINT_ENABLE
      cout << "Queue Size: " << myQ.size() << " Queue Head: " << myQ.front() << endl;
+     #endif
   }
 
 
   //Sanity Check
+  #if PRINT_ENABLE
   for(int j = 0; j < size;j++)
 	    cout << processed[j]<< ",";
 	cout << endl;
-
+  #endif
 }
