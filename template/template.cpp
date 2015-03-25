@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
-#include "../lib/RandomGraph.h"
-#include "../lib/ourTime.h"
-#include "../lib/ourSerial.h"
+#include "../lib/GraphGen.h"
+#include "../lib/support.h"
+#include "../lib/algorithms.h"
 
 #define ARGS 3
 #define TIMER_ENABLE 0
