@@ -9,6 +9,8 @@
 #include <vector>
 #define PRINT_ALG_ENABLE 1
 
+pthread_mutex_t bfs_mutex;
+
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
   //Declare and initialize variables for bookkeeping
@@ -55,14 +57,18 @@ void ourSerialBFS(ListGraph * g, int size, int init)
 	cout << endl;
   #endif
 }
+
+
+
 typedef struct params_t
 {
 	ListGraph * l;
   int index;
-  unordered_map<int, int> visited;
-  queue<int> Q1;
-  queue<int> Q2;
+  unordered_map<int, int> *visited;
+  queue<int> *Q1;
+  queue<int> *Q2;
 } params;
+
 void *bfs_node(void *arg)
 {
     params * p = (params *) arg;
@@ -75,13 +81,15 @@ void *bfs_node(void *arg)
         ListGraph::Node temp((p->l)->oppositeNode(n,edge));
         int i = p->l->id(temp);
         //sychronization??
-        if(!p->visited[i]){
-            p->visited[i]++;
+        pthread_mutex_lock(&bfs_mutex);
+        if(!(*(p->visited))[i]){
+            (*(p->visited))[i] = 1;
             #if PRINT_ALG_ENABLE
             cout << "visit " << i << endl;
             #endif
-            p->Q2.push(i);
+            p->Q2->push(i);
         }
+        pthread_mutex_unlock(&bfs_mutex);
     }
     pthread_exit(NULL);
 }
@@ -109,16 +117,18 @@ void ourParallelBFS(ListGraph * l, int size, int init)
       void *status;
 
       // Initialize and set thread joinable
+      pthread_mutex_init(&bfs_mutex, NULL);
       pthread_attr_init(&attr);
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       params * th_params = (params *) malloc (num_threads * sizeof(params));
+      
       for(i = 0; i < num_threads; i++){
           //cout << "main() : creating thread, " << i << endl;
           th_params[i].l = l;
 		      th_params[i].index = Q1.front();;
-          th_params[i].Q1 = Q1;
-		      th_params[i].Q2 = Q2;
-          th_params[i].visited = visited;
+          th_params[i].Q1 = &Q1;
+		      th_params[i].Q2 = &Q2;
+          th_params[i].visited = &visited;
           rc = pthread_create(&threads[i], NULL, bfs_node, (void *)&(th_params[i]));
           Q1.pop();
           if (rc){
