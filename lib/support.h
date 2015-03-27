@@ -6,7 +6,7 @@
 struct timeval tv; 
 double get_clock() {
     struct timeval tv; int ok;
-    ok = gettimeofday(&tv, (void *) 0);
+    ok = gettimeofday(&tv, NULL);
     if (ok<0) { printf("gettimeofday error");  }
     return (tv.tv_sec * 1.0 + tv.tv_usec * 1.0E-6); 
 }

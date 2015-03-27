@@ -48,11 +48,21 @@ int main(int argc, char * argv[])
       double t1 = get_clock();
     #endif
     //Do Computation
-    ourParallelBFS(&l, size, 0);
+    ourSerialBFS(&l, size, 0);
     #if TIMER_ENABLE
       double t2 = get_clock();
-      printf("Time: %lf seconds\n",(t2-t1));
+      printf("Serial Time: %lf seconds\n",(t2-t1));
     #endif
+	#if TIMER_ENABLE
+      double t3 = get_clock();
+    #endif
+    //Do Computation
+    ourParallelBFS(&l, size, 0);
+    #if TIMER_ENABLE
+      double t4 = get_clock();
+      printf("Parallel Time: %lf seconds\n",(t4-t3));
+    #endif
+
 
     return 0;
 }
