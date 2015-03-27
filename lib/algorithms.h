@@ -7,9 +7,10 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
-#define PRINT_ALG_ENABLE 1
-
-pthread_mutex_t bfs_mutex;
+#define PRINT_ALG_ENABLE 0
+// Number of Locks
+#define MAGIC_NUMBER 10
+pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
 
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
@@ -81,7 +82,7 @@ void *bfs_node(void *arg)
         ListGraph::Node temp((p->l)->oppositeNode(n,edge));
         int i = p->l->id(temp);
         //sychronization??
-        pthread_mutex_lock(&bfs_mutex);
+        pthread_mutex_lock(&(bfs_mutex[i % MAGIC_NUMBER]));
         if(!(*(p->visited))[i]){
             (*(p->visited))[i] = 1;
             #if PRINT_ALG_ENABLE
@@ -89,7 +90,7 @@ void *bfs_node(void *arg)
             #endif
             p->Q2->push(i);
         }
-        pthread_mutex_unlock(&bfs_mutex);
+       pthread_mutex_unlock(&(bfs_mutex[i % MAGIC_NUMBER]));
     }
     pthread_exit(NULL);
 }
@@ -117,7 +118,8 @@ void ourParallelBFS(ListGraph * l, int size, int init)
       void *status;
 
       // Initialize and set thread joinable
-      pthread_mutex_init(&bfs_mutex, NULL);
+	  for(i = 0; i < MAGIC_NUMBER; i++)
+      	pthread_mutex_init(&(bfs_mutex[i]), NULL);
       pthread_attr_init(&attr);
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       params * th_params = (params *) malloc (num_threads * sizeof(params));
