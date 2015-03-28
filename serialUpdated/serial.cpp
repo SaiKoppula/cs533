@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
     num_threads = atoi(argv[2]);
 
     //Build graph -- Template uses Dao's Random Graph Generator
-    random_graph(&l, size, size/10, size/2);
+    full_graph(&l, size);
 
     #if TIMER_ENABLE
       double t1 = get_clock();
