@@ -6,6 +6,9 @@
 #include <vector>
 using namespace std;
 using namespace lemon;
+
+//void assign_random_weight(ListGraph * g, ListGraph::EdgeMap * e, int NumEdges)
+
 #define PRINT_GrGen 0
 /**
 *   Noob Dao's version of generating a random undirected
@@ -17,8 +20,10 @@ using namespace lemon;
 *		lowb: The least number of arcs each node has
 *		highB the largest number of arcs each node has
 **/
-void random_graph(ListGraph * g, int size, int lowB, int highB)
+
+void random_graph(ListGraph * g,int size, int lowB, int highB, int * numEdges)
 {
+  
   int numArcs[size];
   int edges[size][size];
 	vector<ListGraph::Node> vNode;
@@ -45,11 +50,12 @@ void random_graph(ListGraph * g, int size, int lowB, int highB)
 		    	sel = rand() % size;
 			}
 			while(sel == g->id(u) || numArcs[sel] >= highB || edges[g->id(u)][sel] == 1);
-			g->addEdge(u,g->nodeFromId(sel));
-      edges[g->id(u)][sel] = 1;
-      edges[sel][g->id(u)] = 1;
-			numArcs[g->id(u)]++;
-			numArcs[sel]++;
+				g->addEdge(u,g->nodeFromId(sel));
+				(*numEdges)++;
+     			edges[g->id(u)][sel] = 1;
+      			edges[sel][g->id(u)] = 1;
+				numArcs[g->id(u)]++;
+				numArcs[sel]++;
 		}
 
     }
@@ -74,23 +80,23 @@ void random_graph(ListGraph * g, int size, int lowB, int highB)
 
 void full_graph(ListGraph * g, int size)
 {
-  //int edges[size][size];
+  int edges[size][size];
   int numArcs[size];
 	vector<ListGraph::Node> vNode;
 	for(int i = 0; i < size; i++){
 		vNode.push_back(g->addNode());
 		numArcs[i]=0;
-    //for(int j = 0; j < size; j++) edges[i][j] = 0;
+    for(int j = 0; j < size; j++) edges[i][j] = 0;
 	}
 	int counter = 0;
 	for (ListGraph::NodeIt u(*g); u != INVALID; ++u)
     {
-      for (ListGraph::NodeIt v = u; v != INVALID; ++v)
-        if (g->id(u) != g->id(v)/* && edges[g->id(u)][g->id(v)] == 0*/)
+      for (ListGraph::NodeIt v(*g); v != INVALID; ++v)
+        if (g->id(u) != g->id(v) && edges[g->id(u)][g->id(v)] == 0)
         {
           g->addEdge(u,v);
-          //edges[g->id(u)][g->id(v)] = 1;
-          //edges[g->id(v)][g->id(u)] = 1;
+          edges[g->id(u)][g->id(v)] = 1;
+          edges[g->id(v)][g->id(u)] = 1;
           numArcs[g->id(u)]++;
           numArcs[g->id(v)]++;
         }
