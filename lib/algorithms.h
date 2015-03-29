@@ -8,9 +8,8 @@
 #include <pthread.h>
 #include <vector>
 #define PRINT_ALG_ENABLE 0
-// Number of Locks
-#define MAGIC_NUMBER 10
-pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
+
+
 
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
@@ -64,10 +63,10 @@ void ourSerialBFS(ListGraph * g, int size, int init)
 typedef struct params_t
 {
 	ListGraph * l;
-  int index;
-  unordered_map<int, int> *visited;
-  queue<int> *Q1;
-  queue<int> *Q2;
+    int index;
+    int* visited;
+    int localQ[1000];
+    int count;
 } params;
 
 void *bfs_node(void *arg)
@@ -75,22 +74,17 @@ void *bfs_node(void *arg)
     params * p = (params *) arg;
     int index = p->index;
     ListGraph::Node n = p->l->nodeFromId(index);
-    //cout << "index: " << index << endl;
     for(ListGraph::IncEdgeIt e(*(p->l),n); e != INVALID; ++e){
-        //cout << "haha" << endl;
         ListGraph::Edge edge(e);
         ListGraph::Node temp((p->l)->oppositeNode(n,edge));
         int i = p->l->id(temp);
-        //sychronization??
-        pthread_mutex_lock(&(bfs_mutex[i % MAGIC_NUMBER]));
-        if(!(*(p->visited))[i]){
-            (*(p->visited))[i] = 1;
+        if(!p->visited[i]){
             #if PRINT_ALG_ENABLE
             cout << "visit " << i << endl;
             #endif
-            p->Q2->push(i);
+            p->localQ[p->count] = i;
+            p->count++;
         }
-       pthread_mutex_unlock(&(bfs_mutex[i % MAGIC_NUMBER]));
     }
     pthread_exit(NULL);
 }
@@ -99,45 +93,44 @@ void ourParallelBFS(ListGraph * l, int size, int init)
 {
 
   //Parameter inialization
-  unordered_map<int, int> visited;
-  queue<int> Q1;
-  queue<int> Q2;
+  int visited[size];
+    for (int i = 0; i < size; i++)
+        visited[i] = 0;
+  unordered_map<int, int> currentQ;
 
 
-  Q1.push(init);
+  currentQ[init] = 1;
   visited[init] = 1;
 
 
-  while(!Q1.empty())
+  while(!currentQ.empty())
   {
       int rc;
       int i;
-      int num_threads = Q1.size(); //CHANGE THIS
+      int num_threads = currentQ.size(); //CHANGE THIS
       pthread_t threads[num_threads];
       pthread_attr_t attr;
       void *status;
 
       // Initialize and set thread joinable
-	  for(i = 0; i < MAGIC_NUMBER; i++)
-      	pthread_mutex_init(&(bfs_mutex[i]), NULL);
       pthread_attr_init(&attr);
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       params * th_params = (params *) malloc (num_threads * sizeof(params));
       
-      for(i = 0; i < num_threads; i++){
-          //cout << "main() : creating thread, " << i << endl;
+      auto it = currentQ.begin();
+      for (i = 0; i < num_threads; i++) {
           th_params[i].l = l;
-		      th_params[i].index = Q1.front();;
-          th_params[i].Q1 = &Q1;
-		      th_params[i].Q2 = &Q2;
-          th_params[i].visited = &visited;
+          th_params[i].index = it->first;
+          th_params[i].visited = visited;
+          th_params[i].count = 0;
           rc = pthread_create(&threads[i], NULL, bfs_node, (void *)&(th_params[i]));
-          Q1.pop();
           if (rc){
               cout << "Error:unable to create thread," << rc << endl;
               exit(-1);
           }
+          it++;
       }
+      
 
       // free attribute and wait for the other threads
       pthread_attr_destroy(&attr);
@@ -152,13 +145,21 @@ void ourParallelBFS(ListGraph * l, int size, int init)
           cout << "  exiting with status :" << status << endl;
           #endif
       }
+      
+      
+      currentQ.clear();
+      int j;
+      for (i = 0; i < num_threads; i++)
+      {
+          for (j = 0; j < th_params[i].count; j++)
+          {
+              int temp = th_params[i].localQ[j];
+              visited[temp] = 1;
+              currentQ[temp] = 1;
+          }
+      }
+      
 
-
-
-      Q1.swap(Q2);
-
-      while(!Q2.empty())
-          Q2.pop();
   }
 
 }
