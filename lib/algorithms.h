@@ -9,9 +9,41 @@
 #include <vector>
 #define PRINT_ALG_ENABLE 0
 // Number of Locks
-#define MAGIC_NUMBER 10
+#define MAGIC_NUMBER 100
 pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
+pthread_mutex_t queue_mutex;
 
+void ourSerialMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & res,int size, int num_edges)
+{
+	Union_Find UF(size);
+	int i;
+	vector<pair<int,int>> toSort;  //optimization here?
+	toSort.resize(num_edges);
+	for(i = 0 ; i < num_edges; i ++){
+		ListGraph::Edge e = ListGraph::edgeFromId(i);
+		toSort[i] = pair<int,int>(c[e],i);
+	}
+	std::sort(toSort.begin(), toSort.end());
+	
+	int u, v;
+ 
+	for (i = 0; i < num_edges; ++i)
+	{
+		
+		u = g.id(g.u(ListGraph::edgeFromId(toSort[i].second)));
+		v = g.id(g.v(ListGraph::edgeFromId(toSort[i].second)));
+		#if PRINT_ALG_ENABLE
+		cout<< "("<<toSort[i].first<<","<<toSort[i].second<<")"<<endl;
+		cout<< "u,v :("<<u<<","<<v<<")"<<endl;
+		#endif
+		if( !UF.find(u, v) )
+		{
+			UF.unite(u, v);
+			res.push_back(toSort[i].second);
+		}
+	}
+		
+}
 void ourSerialBFS(ListGraph * g, int size, int init)
 {
   //Declare and initialize variables for bookkeeping
@@ -81,16 +113,21 @@ void *bfs_node(void *arg)
         ListGraph::Edge edge(e);
         ListGraph::Node temp((p->l)->oppositeNode(n,edge));
         int i = p->l->id(temp);
+		int lock_id = i % MAGIC_NUMBER;
         //sychronization??
-        pthread_mutex_lock(&(bfs_mutex[i % MAGIC_NUMBER]));
+        pthread_mutex_lock(&(bfs_mutex[lock_id]));
         if(!(*(p->visited))[i]){
             (*(p->visited))[i] = 1;
+			pthread_mutex_unlock(&(bfs_mutex[lock_id]));
             #if PRINT_ALG_ENABLE
             cout << "visit " << i << endl;
             #endif
+            pthread_mutex_lock(&queue_mutex);
             p->Q2->push(i);
+            pthread_mutex_unlock(&queue_mutex);
         }
-       pthread_mutex_unlock(&(bfs_mutex[i % MAGIC_NUMBER]));
+		else
+       		pthread_mutex_unlock(&(bfs_mutex[lock_id]));
     }
     pthread_exit(NULL);
 }
@@ -120,6 +157,7 @@ void ourParallelBFS(ListGraph * l, int size, int init)
       // Initialize and set thread joinable
 	  for(i = 0; i < MAGIC_NUMBER; i++)
       	pthread_mutex_init(&(bfs_mutex[i]), NULL);
+      pthread_mutex_init(&(queue_mutex), NULL);
       pthread_attr_init(&attr);
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       params * th_params = (params *) malloc (num_threads * sizeof(params));
