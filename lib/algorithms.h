@@ -65,7 +65,7 @@ typedef struct params_t
 	ListGraph * l;
     int index;
     int* visited;
-    int localQ[1000];
+    int localQ[10000];
     int count;
 } params;
 
