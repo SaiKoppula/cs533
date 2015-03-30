@@ -15,7 +15,7 @@
 
 #define ARGS 3
 #define TIMER_ENABLE 1
-#define PRINT_MST 1
+#define PRINT_MST 0
 
 using namespace lemon;
 using namespace std;
@@ -67,13 +67,34 @@ int main(int argc, char * argv[])
 		#endif
 	}
 	
-	vector<int> res_edge_id;
-	ourSerialMST(g, c, res_edge_id, size, num_edges);
+	vector<int> res_edge_id_serial;
+	vector<int> res_edge_id_parallel;
+	
+	/* Time the serial execution */
+	double t1 = get_clock();
+	ourSerialMST(g, c, res_edge_id_serial, size, num_edges);
+	double t2 = get_clock();
+    printf("Serial Time: %lf seconds\n",(t2-t1));
+	/* Time the parallel execution */
+	double t3 = get_clock();
+	ourParallelMST(g, c, res_edge_id_parallel, size, num_edges,num_threads);
+	double t4 = get_clock();
+    printf("Parallel Time: %lf seconds\n",(t4-t3));
+    
+    
 	#if PRINT_MST
-	cout << "==========================RESULT=========================="<<endl;
-	for(int i = 0; i < res_edge_id.size();i ++){
-		Edge a = Graph::edgeFromId(res_edge_id[i]);
+	cout << "==========================Parallel RESULT=========================="<<endl;
+	for(int i = 0; i < res_edge_id_parallel.size();i ++){
+		Edge a = Graph::edgeFromId(res_edge_id_parallel[i]);
 		cout <<"("<< g.id(g.u(a))<<","<<g.id(g.v(a))<<")"<<",Value: "<<c[a]<<endl;
 	}
+	cout<<"Total Number of Edges: " << res_edge_id_parallel.size() << endl;
+	cout << "==========================Serial RESULT=========================="<<endl;
+	for(int i = 0; i < res_edge_id_serial.size();i ++){
+		Edge a = Graph::edgeFromId(res_edge_id_serial[i]);
+		cout <<"("<< g.id(g.u(a))<<","<<g.id(g.v(a))<<")"<<",Value: "<<c[a]<<endl;
+	}
+	
+	cout<<"Total Number of Edges: " << res_edge_id_serial.size() << endl;
 	#endif
 }
