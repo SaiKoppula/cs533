@@ -62,16 +62,15 @@ void *mst_node(void *arg)
     int u, v;
     u = (p->gr)->id((p->gr)->u(ListGraph::edgeFromId((*(p->toS))[p->toW].second)));
 	v = (p->gr)->id((p->gr)->v(ListGraph::edgeFromId((*(p->toS))[p->toW].second)));
-//	pthread_mutex_lock(&UF_mutex);
 	if(!(*(p->uf)).find(u, v) && p->t_id == 0)
 	{
 		(*(p->uf)).unite(u, v);
-	//	pthread_mutex_unlock(&UF_mutex);
 		(*(p->resV)).push_back((*(p->toS))[p->toW].second);
 	}
 	else if((*(p->uf)).find(u, v) && p->t_id != 0){
-	//	pthread_mutex_unlock(&UF_mutex);
+		pthread_mutex_lock(&UF_mutex);
 		(*(p->toS)).erase((*(p->toS)).begin() + p->toW);
+		pthread_mutex_unlock(&UF_mutex);
 		// cout<< "Erased 1"<<endl;
 	}
 	//else
