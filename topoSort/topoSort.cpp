@@ -36,18 +36,17 @@ int main(int argc, char * argv[])
     }
     
     //initialize variables
+    ListGraph l;
     ListDigraph g;
     int size;
     int num_threads;
+    int num_edges = 0;
     size = atoi(argv[1]);
     num_threads = atoi(argv[2]);
     
-    //Build a dag -- a path for testing
-    ListDigraph::Node x = g.addNode();
-    ListDigraph::Node y = g.addNode();
-    ListDigraph::Node z = g.addNode();
-    g.addArc(x,y);
-    g.addArc(y,z);
+    //Build a dag
+    random_graph(&l, size, size/10, size/2, &num_edges);
+    listGraph_to_Digraph(&l, &g);
     
 #if TIMER_ENABLE
     double t1 = get_clock();

@@ -3,6 +3,7 @@
 #include <lemon/list_graph.h>
 #include <lemon/full_graph.h>
 #include <lemon/concepts/graph.h>
+#include <lemon/concepts/digraph.h>
 #include <vector>
 using namespace std;
 using namespace lemon;
@@ -113,3 +114,15 @@ void full_graph(ListGraph * g, int size)
     cout << endl;
   #endif
 };
+
+
+void listGraph_to_Digraph(ListGraph * l, ListDigraph * g)
+{
+    for (ListGraph::NodeIt n(*l); n != INVALID; ++n)
+        g->addNode();
+    
+    for (ListGraph::EdgeIt e(*l); e != INVALID; ++e)
+        g->addArc(g->nodeFromId(l->id(l->u(e))), g->nodeFromId(l->id(l->v(e))));
+}
+
+

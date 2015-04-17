@@ -9,6 +9,7 @@
 #include <vector>
 #include <lemon/concepts/digraph.h>
 #define PRINT_ALG_ENABLE 1
+#define CHECK_TOPO_ENABLE 1
 // Number of Locks
 #define MAGIC_NUMBER 100
 pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
@@ -328,7 +329,9 @@ void ourSerialTopo(ListDigraph * g, int size)
     }
     
     if (myQ.empty())
+    {
         cout << "ERROR: Input graph contains cycle." << endl;
+    }
     
     //Visit the nodes with zero indegree
     while(!myQ.empty())
@@ -350,12 +353,31 @@ void ourSerialTopo(ListDigraph * g, int size)
     }
     
 #if PRINT_ALG_ENABLE
+    unordered_map<int, int> test;
+    i = 0;
     while(!result.empty())
     {
+        #if CHECK_TOPO_ENABLE
+        test[result.front()] = i;
+        i++;
+        #endif
         cout << result.front() << ",";
         result.pop();
     }
     cout << endl;
+    
+    #if CHECK_TOPO_ENABLE
+    for (ListDigraph::ArcIt a(*g); a != INVALID; ++a)
+    {
+        int s = g->id(g->source(a));
+        int t = g->id(g->target(a));
+        if (test[s] >= test[t])
+        {
+            cout << "ERROR at " << s << " -> " << t << endl;
+            //cout << test[s] << test[t] << endl;
+        }
+    }
+    #endif
 #endif
   
 }
