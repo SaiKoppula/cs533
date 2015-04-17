@@ -7,7 +7,8 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <vector>
-#define PRINT_ALG_ENABLE 0
+#include <lemon/concepts/digraph.h>
+#define PRINT_ALG_ENABLE 1
 // Number of Locks
 #define MAGIC_NUMBER 100
 pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
@@ -301,3 +302,69 @@ void ourParallelBFS(ListGraph * l, int size, int init)
   }
 
 }
+
+
+
+
+void ourSerialTopo(ListDigraph * g, int size)
+{
+    //Declare and initialize variables for bookkeeping
+    int inDegree[size];
+    queue<int> myQ;
+    queue<int> result;
+    ListDigraph::Node u, v;
+    int i;
+    
+    //Get indegrees of all nodes in the graph
+    for(i = 0; i < size; i++)
+    {
+        u = g->nodeFromId(i);
+        int numIn = 0;
+        for (ListDigraph::InArcIt a(*g, u); a != INVALID; ++a)
+            numIn++;
+        inDegree[i] = numIn;
+        if (numIn == 0)
+            myQ.push(i);
+    }
+    
+    if (myQ.empty())
+        cout << "ERROR: Input graph contains cycle." << endl;
+    
+    //Visit the nodes with zero indegree
+    while(!myQ.empty())
+    {
+        i = myQ.front();
+        myQ.pop();
+        u = g->nodeFromId(i);
+        for (ListDigraph::OutArcIt a(*g, u); a != INVALID; ++a)
+        {
+            ListDigraph::Arc arc(a);
+            ListDigraph::Node v(g->target(arc));
+            int j = g->id(v);
+            inDegree[j]--;
+            if (inDegree[j] == 0)
+                myQ.push(j);
+        }
+        inDegree[i] = -1;
+        result.push(i);
+    }
+    
+#if PRINT_ALG_ENABLE
+    while(!result.empty())
+    {
+        cout << result.front() << ",";
+        result.pop();
+    }
+    cout << endl;
+#endif
+  
+}
+
+
+void ourParallelTopo(ListDigraph * g, int size)
+{
+    
+}
+
+
+
