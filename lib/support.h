@@ -4,6 +4,12 @@
 #include <math.h>
 #include <string.h>
 #include <algorithm>
+#include <lemon/list_graph.h>
+#include <lemon/full_graph.h>
+#include <lemon/concepts/digraph.h>
+#include <lemon/concepts/graph.h>
+#include<lemon/graph_to_eps.h>
+#include <lemon/core.h>
 using namespace std;
 struct timeval tv; 
 double get_clock() {
@@ -64,3 +70,69 @@ class Union_Find
 		free(sz);
 	}
 };
+
+
+
+
+int graphHasCycle(ListDigraph *g, int size)
+{
+    // Check if a graph has a cycle using BFS
+    ListDigraph::Node u;
+    int i;
+    int inDegree[size];
+    queue<int> sourceQ;
+    for(i = 0; i < size; i++)
+    {
+        u = g->nodeFromId(i);
+        int numIn = 0;
+        for (ListDigraph::InArcIt a(*g, u); a != INVALID; ++a)
+            numIn++;
+        inDegree[i] = numIn;
+        if (numIn == 0)
+            sourceQ.push(i);
+    }
+    
+    
+    while(!sourceQ.empty()){
+        int source = sourceQ.front();
+        sourceQ.pop();
+        
+        int processed[size];
+        queue<int> myQ;
+    
+    for(i = 0; i < size; i++)
+        processed[i]=0;
+
+    
+    myQ.push(source);
+    int curr;
+    
+    while(!myQ.empty())
+    {
+        i = myQ.front();
+        myQ.pop();
+        u = g->nodeFromId(i);
+        processed[i] = 1;
+        for (ListDigraph::OutArcIt a(*g, u); a != INVALID; ++a)
+        {
+            ListDigraph::Arc arc(a);
+            ListDigraph::Node v(g->target(arc));
+            int j = g->id(v);
+            if(processed[j] == 0)
+            {
+                myQ.push(j);
+                //cout << i << " -> " << j << endl;
+            }
+            else
+            {
+                //cout << "random graph has a cycle!" << endl;
+                return 1;
+            }
+        }
+    }
+    }
+    
+    return 0;
+
+}
+

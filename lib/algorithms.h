@@ -307,7 +307,7 @@ void ourParallelBFS(ListGraph * l, int size, int init)
 
 
 
-void ourSerialTopo(ListDigraph * g, int size)
+int ourSerialTopo(ListDigraph * g, int size)
 {
     //Declare and initialize variables for bookkeeping
     int inDegree[size];
@@ -331,11 +331,17 @@ void ourSerialTopo(ListDigraph * g, int size)
     if (myQ.empty())
     {
         cout << "ERROR: Input graph contains cycle." << endl;
+        return -1;
     }
     
     //Visit the nodes with zero indegree
     while(!myQ.empty())
     {
+        /*
+        for (int k = 0; k < size; k++)
+            cout << k << ": " << inDegree[k] << endl;
+        cout << endl << endl << endl << endl;
+         */
         i = myQ.front();
         myQ.pop();
         u = g->nodeFromId(i);
@@ -352,7 +358,17 @@ void ourSerialTopo(ListDigraph * g, int size)
         result.push(i);
     }
     
+    for(i = 0; i < size; i++)
+    {
+        if (inDegree[i] != -1)
+        {
+            cout << "ERROR: Input graph contains cycle." << endl;
+            return -1;
+        }
+    }
+    
 #if PRINT_ALG_ENABLE
+    
     unordered_map<int, int> test;
     i = 0;
     while(!result.empty())
@@ -379,7 +395,8 @@ void ourSerialTopo(ListDigraph * g, int size)
     }
     #endif
 #endif
-  
+    
+    return 0;
 }
 
 
