@@ -73,10 +73,11 @@ class Union_Find
 
 
 
-
+// Check if a graph has a cycle using BFS
+// Take too much time
+// Ditched (X___X)
 int graphHasCycle(ListDigraph *g, int size)
 {
-    // Check if a graph has a cycle using BFS
     ListDigraph::Node u;
     int i;
     int inDegree[size];

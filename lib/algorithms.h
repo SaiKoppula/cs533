@@ -8,8 +8,8 @@
 #include <pthread.h>
 #include <vector>
 #include <lemon/concepts/digraph.h>
-#define PRINT_ALG_ENABLE 1
-#define CHECK_TOPO_ENABLE 1
+#define PRINT_ALG_ENABLE 0
+#define CHECK_TOPO_ENABLE 0
 // Number of Locks
 #define MAGIC_NUMBER 100
 pthread_mutex_t bfs_mutex[MAGIC_NUMBER];
@@ -400,9 +400,168 @@ int ourSerialTopo(ListDigraph * g, int size)
 }
 
 
-void ourParallelTopo(ListDigraph * g, int size)
+
+
+
+typedef struct init_params_t
 {
+    ListDigraph * g;
+    int* inDegree;
+    int i;
+    int size;
+    int num_threads;
+    int num_ret;
+    int ret[10000];
+} init_params;
+
+void *topo_init(void *arg)
+{
+    init_params * p = (init_params *) arg;
+    ListDigraph * g = p->g;
+    int* inDegree = p->inDegree;
+    int i = p->i;
+    int num_threads = p->num_threads;
+    int size = p->size;
+    int num_ret = 0;
+    for (int k = 0; k < (size-1)/num_threads+1; k++) {
+        int index = k*num_threads+i;
+        if (index >= size)
+            break;
+        ListDigraph::Node u = g->nodeFromId(index);
+        int numIn = 0;
+        for (ListDigraph::InArcIt a(*g, u); a != INVALID; ++a)
+            numIn++;
+        inDegree[index] = numIn;
+        if (numIn == 0) {
+            p->ret[num_ret] = index;
+            num_ret++;
+        }
+    }
+    p->num_ret = num_ret;
+    pthread_exit(NULL);
+}
+
+
+
+int ourParallelTopo(ListDigraph * g, int size, int num_threads)
+{
+    //Declare and initialize variables for bookkeeping
+    int inDegree[size];
+    queue<int> myQ;
+    queue<int> result;
+    ListDigraph::Node u, v;
     
+    int rc;
+    int i, j, k;
+    pthread_t initThreads[num_threads];
+    pthread_attr_t attr;
+    void *status;
+    
+    // Initialize and set thread joinable
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    init_params * initParams = (init_params *) malloc (num_threads * sizeof(init_params));
+
+    
+        for (i = 0; i < num_threads; i++) {
+            initParams[i].g = g;
+            initParams[i].inDegree = inDegree;
+            initParams[i].i = i;
+            initParams[i].size = size;
+            initParams[i].num_threads = num_threads;
+            rc = pthread_create(&initThreads[i], NULL, topo_init, (void *)&(initParams[i]));
+            if (rc){
+                cout << "Error:unable to create thread," << rc << endl;
+                exit(-1);
+            }
+        }
+        
+        // free attribute and wait for the other threads
+        pthread_attr_destroy(&attr);
+        
+        for(i = 0; i < num_threads; i++){
+            rc = pthread_join(initThreads[i], &status);
+            if(rc){
+                cout << "Error:unable to join," << rc << endl;
+                exit(-1);
+            }
+        }
+    
+    
+    for (i = 0; i < num_threads; i++)
+    {
+        for (j = 0; j < initParams[i].num_ret; j++)
+            myQ.push(initParams[i].ret[j]);
+    }
+    
+    
+    if (myQ.empty())
+    {
+        cout << "ERROR: Input graph contains cycle." << endl;
+        return -1;
+    }
+    
+    //Visit the nodes with zero indegree
+    while(!myQ.empty())
+    {
+        i = myQ.front();
+        myQ.pop();
+        u = g->nodeFromId(i);
+        for (ListDigraph::OutArcIt a(*g, u); a != INVALID; ++a)
+        {
+            ListDigraph::Arc arc(a);
+            ListDigraph::Node v(g->target(arc));
+            int j = g->id(v);
+            inDegree[j]--;
+            if (inDegree[j] == 0)
+                myQ.push(j);
+        }
+        inDegree[i] = -1;
+        result.push(i);
+    }
+    
+    for(i = 0; i < size; i++)
+    {
+        if (inDegree[i] != -1)
+        {
+            //cout << "ERROR: Input graph contains cycle." << endl;
+            return -1;
+        }
+    }
+    
+#if PRINT_ALG_ENABLE
+    
+    unordered_map<int, int> test;
+    i = 0;
+    while(!result.empty())
+    {
+#if CHECK_TOPO_ENABLE
+        test[result.front()] = i;
+        i++;
+#endif
+        cout << result.front() << ",";
+        result.pop();
+    }
+    cout << endl;
+    
+#if CHECK_TOPO_ENABLE
+    for (ListDigraph::ArcIt a(*g); a != INVALID; ++a)
+    {
+        int s = g->id(g->source(a));
+        int t = g->id(g->target(a));
+        if (test[s] >= test[t])
+        {
+            cout << "ERROR at " << s << " -> " << t << endl;
+            //cout << test[s] << test[t] << endl;
+        }
+    }
+#endif
+#endif
+    
+    return 0;
+
+    
+
 }
 
 

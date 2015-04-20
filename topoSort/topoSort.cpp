@@ -44,6 +44,13 @@ int main(int argc, char * argv[])
     int num_edges = 0;
     size = atoi(argv[1]);
     num_threads = atoi(argv[2]);
+    
+    if(num_threads < 1)
+    {
+        cout << "Invalid number of threads." << endl;
+        usage();
+        return -1;
+    }
 
     int fail = 0;
 #if AUTO_REPEAT
@@ -68,16 +75,18 @@ int main(int argc, char * argv[])
 #endif
     //Do Computation
     fail = ourSerialTopo(&g, size);
-#if AUTO_REPEAT
-    if (fail)
-    {
-        l.clear();
-        g.clear();
-        continue;
-    }
-#endif
 #if TIMER_ENABLE
     double t2 = get_clock();
+#endif
+#if AUTO_REPEAT
+        if (fail)
+        {
+            l.clear();
+            g.clear();
+            continue;
+        }
+#endif
+#if TIMER_ENABLE
     printf("Serial Time: %lf seconds\n",(t2-t1));
 #endif
     
@@ -87,7 +96,7 @@ int main(int argc, char * argv[])
     double t3 = get_clock();
 #endif
     //Do Computation
-    ourParallelTopo(&g, size);
+    ourParallelTopo(&g, size, num_threads);
 #if TIMER_ENABLE
     double t4 = get_clock();
     printf("Parallel Time: %lf seconds\n",(t4-t3));
