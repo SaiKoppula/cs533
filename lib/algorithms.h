@@ -295,25 +295,28 @@ void *bfs_node(void *arg)
     pthread_exit(NULL);
 }
 
-void ourParallelBFS(ListGraph * l, int size, int init)
+void ourParallelBFS(ListGraph * l, int size, int init, int max_threads)
 {
 
   //Parameter inialization
   int visited[size];
-    for (int i = 0; i < size; i++)
+  for (int i = 0; i < size; i++)
         visited[i] = 0;
   unordered_map<int, int> currentQ;
+  unordered_map<int, int> nextQ;
 
 
   currentQ[init] = 1;
   visited[init] = 1;
 
+  auto it = currentQ.begin();
 
   while(!currentQ.empty())
   {
       int rc;
       int i;
-      int num_threads = currentQ.size(); //CHANGE THIS
+      int num_threads = (currentQ.size() > max_threads) ? max_threads : currentQ.size(); //CHANGE THIS
+      //cout << currentQ.size() << " " << max_threads << " " << num_threads << " " << nextQ.size() << endl;
       pthread_t threads[num_threads];
       pthread_attr_t attr;
       void *status;
@@ -323,10 +326,15 @@ void ourParallelBFS(ListGraph * l, int size, int init)
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
       params * th_params = (params *) malloc (num_threads * sizeof(params));
       
-      auto it = currentQ.begin();
+    
+      //auto it = currentQ.begin();
+      if (nextQ.empty())
+          it = currentQ.begin();
+      
       for (i = 0; i < num_threads; i++) {
           th_params[i].l = l;
           th_params[i].index = it->first;
+          //cout << "launch " << it->first;
           th_params[i].visited = visited;
           th_params[i].count = 0;
           rc = pthread_create(&threads[i], NULL, bfs_node, (void *)&(th_params[i]));
@@ -334,7 +342,10 @@ void ourParallelBFS(ListGraph * l, int size, int init)
               cout << "Error:unable to create thread," << rc << endl;
               exit(-1);
           }
+          
+          auto prev = it;
           it++;
+          currentQ.erase(prev);
       }
       
 
@@ -353,7 +364,10 @@ void ourParallelBFS(ListGraph * l, int size, int init)
       }
       
       
-      currentQ.clear();
+      
+      
+      
+      //currentQ.clear();
       int j;
       for (i = 0; i < num_threads; i++)
       {
@@ -361,8 +375,15 @@ void ourParallelBFS(ListGraph * l, int size, int init)
           {
               int temp = th_params[i].localQ[j];
               visited[temp] = 1;
-              currentQ[temp] = 1;
+              //currentQ[temp] = 1;
+              nextQ[temp] = 1;
           }
+      }
+      
+      if (currentQ.empty())
+      {
+          currentQ = nextQ;
+          nextQ.clear();
       }
       
 
