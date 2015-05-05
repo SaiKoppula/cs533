@@ -93,6 +93,7 @@ typedef struct params_t_mst
   	int toW;
   	Union_Find * uf;
   	vector<int> * resV;
+  	int * toE;
 } params_m;
 
 void *mst_node(void *arg)
@@ -108,10 +109,7 @@ void *mst_node(void *arg)
 		(*(p->resV)).push_back((*(p->toS))[p->toW].second);
 	}
 	else if((*(p->uf)).find(u, v) && p->t_id != 0){
-		pthread_mutex_lock(&UF_mutex);
-		(*(p->toS)).erase((*(p->toS)).begin() + p->toW);
-		pthread_mutex_unlock(&UF_mutex);
-		// cout<< "Erased 1"<<endl;
+		(p->toE)[p->t_id] = p->toW;
 	}
 	//else
 //		pthread_mutex_unlock(&UF_mutex);
@@ -129,9 +127,28 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
 		toSort[i] = pair<int,int>(c[e],i);
 	}
 	std::sort(toSort.begin(), toSort.end());
-	pthread_mutex_init(&(UF_mutex), NULL);
-	int toWork = 0;
+	int u,v;
+	for (i = 0; i < num_edges/2; ++i)
+	{
+		
+		u = g.id(g.u(ListGraph::edgeFromId(toSort[i].second)));
+		v = g.id(g.v(ListGraph::edgeFromId(toSort[i].second)));
+		#if PRINT_ALG_ENABLE
+		cout<< "("<<toSort[i].first<<","<<toSort[i].second<<")"<<endl;
+		cout<< "u,v :("<<u<<","<<v<<")"<<endl;
+		#endif
+		if( !UF.find(u, v) )
+		{
+			UF.unite(u, v);
+			res.push_back(toSort[i].second);
+		}
+	}
+	int toWork = i;
 	int rc;
+	int toErase[num_t];
+	for( int i = 0; i < num_t;i ++){
+		toErase[i] = -1;
+	}
 	params_m * th_params = (params_m *) malloc (num_t * sizeof(params_m));
 	while(toWork < toSort.size()){
 	  int num_threads = min(num_t,(int)toSort.size() - toWork);
@@ -151,6 +168,7 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
 		  th_params[i].uf = &UF;
           th_params[i].toS = &toSort;
           th_params[i].toW = toWork +  i * (size - toWork) / num_threads; //calculate the node to examine
+          th_params[i].toE = toErase;
           #if PRINT_ALG_ENABLE
           cout << "Thread " << i <<" working on " << th_params[i].toW << endl;
           
@@ -180,10 +198,20 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
           cout << "  exiting with status :" << status << endl;
           #endif
       }
+      int offset = 0;
+      
+      for( int i = 0; i < num_t;i ++){
+		if(toErase[i] != -1){
+			toSort.erase(toSort.begin() + toErase[i] - offset);
+			offset++;
+			toErase[i] = -1;
+			//cout << "working!" << endl;
+		}
+	  }
+	  //cout << "Get rid of " <<offset<< endl;
       toWork++; 
      
 	}
-
 
 }
 
