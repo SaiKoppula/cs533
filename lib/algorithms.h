@@ -98,7 +98,7 @@ typedef struct params_t_mst
 
 void *mst_node(void *arg)
 {
-    params_m * p = (params_m *) arg;
+    /*params_m * p = (params_m *) arg;
 
     int u, v;
     u = (p->gr)->id((p->gr)->u(ListGraph::edgeFromId((*(p->toS))[p->toW].second)));
@@ -110,7 +110,7 @@ void *mst_node(void *arg)
 	}
 	else if((*(p->uf)).find(u, v) && p->t_id != 0){
 		(p->toE)[p->t_id] = p->toW;
-	}
+	}*/
 	//else
 //		pthread_mutex_unlock(&UF_mutex);
 	pthread_exit(NULL);
@@ -127,7 +127,8 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
 		toSort[i] = pair<int,int>(c[e],i);
 	}
 	std::sort(toSort.begin(), toSort.end());
-	int u,v;
+	
+	/*int u,v;
 	for (i = 0; i < num_edges/2; ++i)
 	{
 		
@@ -142,14 +143,23 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
 			UF.unite(u, v);
 			res.push_back(toSort[i].second);
 		}
-	}
-	int toWork = i;
+	}*/
+	int toWork = 0;
 	int rc;
 	int toErase[num_t];
 	for( int i = 0; i < num_t;i ++){
 		toErase[i] = -1;
 	}
 	params_m * th_params = (params_m *) malloc (num_t * sizeof(params_m));
+	
+	for(i = 0; i < num_t; i++){
+          //cout << "main() : creating thread, " << i << endl;
+		  th_params[i].gr = &g;
+		  th_params[i].t_id = i;
+		  th_params[i].uf = &UF;
+          th_params[i].toS = &toSort;
+          th_params[i].toE = toErase;
+    }
 	while(toWork < toSort.size()){
 	  int num_threads = min(num_t,(int)toSort.size() - toWork);
 	  pthread_t threads[num_threads];
@@ -163,30 +173,19 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
      
       for(i = 0; i < num_threads; i++){
           //cout << "main() : creating thread, " << i << endl;
-		  th_params[i].gr = &g;
-		  th_params[i].t_id = i;
-		  th_params[i].uf = &UF;
-          th_params[i].toS = &toSort;
           th_params[i].toW = toWork +  i * (size - toWork) / num_threads; //calculate the node to examine
-          th_params[i].toE = toErase;
-          #if PRINT_ALG_ENABLE
-          cout << "Thread " << i <<" working on " << th_params[i].toW << endl;
-          
-          if(i==0){
-          	      cout << "Thread " << i <<" working on " << th_params[i].toW << endl;
-          	      cout << "Size " << toSort.size() << endl;
-          }
-          #endif
           th_params[i].resV = & res;
+          
           rc = pthread_create(&threads[i], NULL, mst_node, (void *)&(th_params[i]));
+ 
           if (rc){
               cout << "Error:unable to create thread," << rc << endl;
               exit(-1);
           }
       }
-
       //free attribute and wait for the other threads
       pthread_attr_destroy(&attr);
+      
       for(i = 0; i < num_threads; i++){
           rc = pthread_join(threads[i], &status);
           if(rc){
@@ -209,8 +208,8 @@ void ourParallelMST(ListGraph & g, ListGraph::EdgeMap<int> & c, vector<int> & re
 		}
 	  }
 	  //cout << "Get rid of " <<offset<< endl;
-      toWork++; 
-     
+      toWork+= num_threads; 
+     // cout << toWork << ":" << toSort.size() << endl;
 	}
 
 }
